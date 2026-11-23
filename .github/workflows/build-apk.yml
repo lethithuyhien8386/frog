@@ -21,10 +21,15 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - name: Android SDK command-line tools
-        uses: android-actions/setup-android@v3
-      - name: Install only the actual required SDK packages (no deprecated tools package)
-        run: sdkmanager --install 'platforms;android-35' 'build-tools;35.0.0' 'platform-tools'
+      # setup-android@v3 implicitly runs `sdkmanager tools` because of its
+      # old default packages. Google removed that legacy SDK package.
+      # v4 defaults to platform-tools; specify it explicitly for clarity.
+      - name: Android SDK command-line tools (no legacy tools package)
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools'
+      - name: Install Android API 35 and Build-Tools 35.0.0
+        run: sdkmanager --install 'platforms;android-35' 'build-tools;35.0.0'
       - name: Gradle 8.9
         uses: gradle/actions/setup-gradle@v4
         with:
