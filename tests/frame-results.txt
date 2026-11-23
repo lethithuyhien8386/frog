@@ -1,0 +1,14 @@
+video07.jpg -> OPEN_UPGRADES @ (289,620) 0.69 Bottom-right upgrade tab
+video10.jpg -> OPEN_UPGRADES @ (289,620) 0.69 Bottom-right upgrade tab
+video04.jpg -> BUY_WITH_COINS @ (268,298) 0.92 Green button with a yellow coin-price icon
+video06.jpg -> OPEN_UPGRADES @ (289,620) 0.69 Bottom-right upgrade tab
+video11.jpg -> BUY_WITH_COINS @ (268,283) 0.92 Green button with a yellow coin-price icon
+video09.jpg -> CLOSE_PANEL @ (300,153) 0.76 Orange round dismiss icon; no safe coin purchase
+video02.jpg -> OPEN_UPGRADES @ (289,620) 0.69 Bottom-right upgrade tab
+video05.jpg -> OPEN_UPGRADES @ (289,620) 0.69 Bottom-right upgrade tab
+manage_raw720.jpg -> BUY_WITH_COINS @ (537,595) 0.91 Green button with a yellow coin-price icon
+video01.jpg -> OPEN_UPGRADES @ (289,620) 0.69 Bottom-right upgrade tab
+level_raw720.jpg -> BUY_WITH_COINS @ (450,949) 0.92 Green button with a yellow coin-price icon
+video08.jpg -> OPEN_UPGRADES @ (289,620) 0.69 Bottom-right upgrade tab
+video03.jpg -> BUY_WITH_COINS @ (225,474) 0.93 Green button with a yellow coin-price icon
+PASS: 13 screenshot examples, 5 coin purchase detections

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Froggy Pilot Auto</string>
+    <string name="a11y_description">Điều khiển chạm và phân tích ảnh màn hình cho trò chơi quản lý quán ăn theo yêu cầu người dùng. Chỉ chạy khi người dùng bấm Start và dừng khi bấm Stop.</string>
+</resources>
