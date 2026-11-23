@@ -123,7 +123,7 @@ public final class GameAccessibilityService extends AccessibilityService {
         running=true;generation++;lockedPackage=null;
         lastActionMs=0;lastUpgradeOpenMs=0;lastSignature=Long.MIN_VALUE;
         lastKind=RestaurantVision.Kind.WAIT;lastX=-1;lastY=-1;consecutive=0;
-        message("RUNNING");schedule(generation,120);
+        message("RUNNING");schedule(generation,45);
     }
     private void stopBot(){
         // Invalidate all capture callbacks and queued taps, immediately.
@@ -211,18 +211,24 @@ public final class GameAccessibilityService extends AccessibilityService {
     }
     private void respond(RestaurantVision.Decision d,float sx,float sy,int token){
         long now=SystemClock.elapsedRealtime();
-        if(d.kind==RestaurantVision.Kind.WAIT){message("SCANNING");schedule(token,400);return;}
+        if(d.kind==RestaurantVision.Kind.WAIT){message("NO TARGET");schedule(token,200);return;}
         if(d.kind==RestaurantVision.Kind.OPEN_UPGRADES && now-lastUpgradeOpenMs<13500){
             message("AUTO IDLE");schedule(token,480);return;
         }
-        long gap=d.kind==RestaurantVision.Kind.BUY_WITH_COINS?950:1500;
-        if(now-lastActionMs<gap){schedule(token,350);return;}
+        // Tutorial interaction must respond as soon as first screenshot returns.
+        // Other actions are also faster, but remain rate-limited to avoid
+        // accidentally sending multiple gestures before the game updates.
+        long gap=d.kind==RestaurantVision.Kind.TUTORIAL_TAP?100:
+                d.kind==RestaurantVision.Kind.BUY_WITH_COINS?320:
+                d.kind==RestaurantVision.Kind.CONTINUE?320:
+                d.kind==RestaurantVision.Kind.CLOSE_PANEL?420:750;
+        if(now-lastActionMs<gap){schedule(token,Math.max(65,gap-(now-lastActionMs)));return;}
         int x=Math.round(d.x*sx),y=Math.round(d.y*sy);
         boolean same=d.kind==lastKind && Math.abs(x-lastX)<18 && Math.abs(y-lastY)<18 &&
                 d.signature==lastSignature;
         if(same){
             consecutive++;
-            if(consecutive>=3){message("NO CHANGE");schedule(token,2300);return;}
+            if(consecutive>=2){message("NO CHANGE");schedule(token,1050);return;}
         }else consecutive=0;
         if(overlayCovers(x,y)){message("MOVE FLOAT");schedule(token,800);return;}
         if(d.kind==RestaurantVision.Kind.OPEN_UPGRADES)lastUpgradeOpenMs=now;
@@ -232,15 +238,16 @@ public final class GameAccessibilityService extends AccessibilityService {
         try{
             boolean sent=dispatchGesture(gesture,new GestureResultCallback(){
                 @Override public void onCompleted(GestureDescription g){
-                    if(running&&token==generation)schedule(token,350);
+                    if(running&&token==generation)schedule(token,120);
                 }
                 @Override public void onCancelled(GestureDescription g){
-                    if(running&&token==generation)schedule(token,550);
+                    if(running&&token==generation)schedule(token,320);
                 }
             },main);
             if(!sent){message("CLICK ERROR");schedule(token,750);return;}
             lastActionMs=now;lastSignature=d.signature;lastKind=d.kind;lastX=x;lastY=y;
             switch(d.kind){
+                case TUTORIAL_TAP:message("TUTORIAL");break;
                 case BUY_WITH_COINS:message("COIN UP");break;
                 case CONTINUE:message("NEXT");break;
                 case CLOSE_PANEL:message("CLOSE");break;

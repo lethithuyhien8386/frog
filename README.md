@@ -1,6 +1,6 @@
 # Froggy Pilot Auto — Source for Android APK (offline)
 
-This is a **new Froggy/eatery management game** project based on screenshots sampled from the eleven user-provided recordings `1(1).mp4` … `11.mp4`. It is **not** the older BubblePilot bubble-shooting game. The gameplay in the recordings features frogs, food orders, upgrade menus, recipe/level unlocks, coin-price buttons and dismissible reward/management panels.
+This is **v1.1 FASTFIX** of the Froggy/eatery management game project based on screenshots sampled from the eleven user-provided recordings `1(1).mp4` … `11.mp4`. It is **not** the older BubblePilot bubble-shooting game. The gameplay in the recordings features frogs, food orders, upgrade menus, recipe/level unlocks, coin-price buttons and dismissible reward/management panels.
 
 ## What is included
 
@@ -8,6 +8,9 @@ This is a **new Froggy/eatery management game** project based on screenshots sam
 - Draggable floating controls: ▶ Start, ■ Stop, × close, status. Stop invalidates all pending screenshots/tap callbacks, preventing additional taps after stopping. Game package locks on the first foreground third-party app seen after tapping ▶, and automation pauses when another app becomes foreground.
 - Local `RestaurantVision`: detects filled green button regions, distinguishes **coin price icon** (yellow) from gem-related offers (blue), recognizes some modal panels / close icons, and can periodically open the green-arrow upgrade tab. The detector processes screenshots entirely on device, using no server and no networking permission.
 - `tests/frames/`: 11 extracted 360x640 screenshots (one for each video) and two high-resolution reference frames. `tests/VisionTest.java` gives a repeatable, offline JVM regression; `tests/frame-results.txt` records local results.
+- Tutorial spotlight detector: when the game dims the board and highlights a single white/mint object, tap that object immediately (including the user's stuck 443×796 screenshot at ~150,335). No fixed coordinates.
+- Faster screen reactions: first scan ~45ms after ▶, tutorial taps have ~100ms action cooldown, subsequent captures scheduled ~120ms after dispatch. Actual speed is limited by the Android screenshot API and device performance.
+- Status shows `TUTORIAL` when dispatched or `NO TARGET` if no safe actionable item is recognized; this makes idle behavior easier to diagnose.
 - GitHub Actions: Java/JVM frame tests → Android compile → ZIP/dex/manifest/alignment/signature/version verification → emulator installation + activity launch for Android API 28, 30, 35 → publish artifact only when tests succeed.
 
 ## How to build on GitHub
@@ -29,7 +32,7 @@ Uses JDK 17, Gradle 8.9, Android Gradle Plugin 8.6.1, Android SDK platform 35, B
 
 ## Important limitations (read before use)
 
-The eleven videos are long, with many missions and temporary menus. The screenshots were inspected and the Java recognizer was regression-tested on **selected** frames only. This is a **best-effort, rules-based automation prototype**: it is *not demonstrated to finish all stages autonomously*, solve every customer order, distinguish all reward/ad dialogs, or recognize each future UI variation. In particular, there is no full gameplay simulation or language OCR. The engine deliberately **does not purchase gem/real-money/ad offers**, even if that slows or blocks progress. A tap on a green button is not an assurance that the game will accept the purchase. Please test on your own game/version and monitor actions before allowing prolonged automation.
+The eleven videos are long, with many missions and temporary menus. The screenshots were inspected and the Java recognizer was regression-tested on **selected** frames (including the user-reported stuck screenshot and two dark-overlay tutorials from the videos) only. This is a **best-effort, rules-based automation prototype**: it is *not demonstrated to finish all stages autonomously*, solve every customer order, distinguish all reward/ad dialogs, or recognize each future UI variation. In particular, there is no full gameplay simulation or language OCR. The engine deliberately **does not purchase gem/real-money/ad offers**, even if that slows or blocks progress. A tap on a green button is not an assurance that the game will accept the purchase. Please test on your own game/version and monitor actions before allowing prolonged automation.
 
 For reproducible proof of actual gameplay behavior, record a screen session from the built APK on the target Android/CloudPhone device, including gameplay, permissions and Start/Stop, then use that evidence for follow-up recognition improvements. Current ZIP creation does not imply emulator tests or real-world game testing have already passed; those checks execute when GitHub Actions runs.
 
@@ -50,3 +53,11 @@ tests/VisionTest.java
 tests/frames/*.jpg
 build-apk.sh
 ```
+
+## FASTFIX v1.1: tutorial action on screenshot showing `SCANNING`
+
+In the supplied screenshot the previous version had no button-shaped green target, so its engine returned `WAIT` forever. The game had dimmed the board and highlighted a white/mint item under a red arrow (approximately x=150, y=335 in the provided screenshot). `RestaurantVision.findTutorialSpotlight()` now detects one isolated bright connected component on a dimmed board. Detection runs **before** green coin-button logic. The current test suite covers the original user screenshot, similar video1_08 and video1_54 frames, and negative popup samples where it must not mistake a panel for a spotlight.
+
+The first tap is triggered on the first successful screenshot after the overlay ▶ button. On Android 11+, screen capture may be system-throttled; these are target delays, not guaranteed physical reaction-time measurements. No device runtime has been tested here.
+
+If a different state remains `NO TARGET`, capture a screenshot showing the entire gameplay screen (and the floating status), as each menu and tutorial style must be validated for new actions.

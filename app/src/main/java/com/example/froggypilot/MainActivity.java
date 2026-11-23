@@ -36,7 +36,7 @@ public final class MainActivity extends Activity {
         body.setPadding(dp(20),dp(28),dp(20),dp(30));
         scroll.addView(body);setContentView(scroll);
         body.addView(text("FROGGY PILOT AUTO",24,white,true));
-        body.addView(text("v1.0 • Nhận diện màn hình • Tự thao tác offline • Không API AI",13,muted,false));
+        body.addView(text("v1.1 FASTFIX • Nhận diện tutorial • Chạm nhanh • Offline",13,muted,false));
         gap(22);title("1. Quyền truy cập");
         permission=text("Đang kiểm tra…",13,white,false);body.addView(permission);gap(10);
         Button access=button("CLICK — Bật quyền Trợ năng (Accessibility)");body.addView(access);
@@ -55,7 +55,7 @@ public final class MainActivity extends Activity {
             gap(7);body.addView(text("CAPTURE: Android 11+ chụp màn hình bằng quyền Accessibility đã bật; không cần ứng dụng bên ngoài.",12,muted,false));
         }
         gap(23);title("2. Cách chơi tự động");
-        body.addView(text("Thiết kế cho game quản lý quán ăn nhân vật ếch trong 11 video. Ảnh được phân tích ngay trên điện thoại. Bot sẽ ưu tiên nút giá xu, xử lý nút tiếp tục và định kỳ mở trang nâng cấp.",13,muted,false));
+        body.addView(text("Đã thêm nhận diện vùng sáng của màn hướng dẫn để chạm ngay; tiếp theo tự xử lý nút giá xu, tiếp tục và nâng cấp khi nhận diện được.",13,muted,false));
         gap(12);
         coins=check("Tự mua nâng cấp / mở món bằng xu", "coins");
         continueButton=check("Tự nhấn tiếp tục khi nhận diện được", "continue");

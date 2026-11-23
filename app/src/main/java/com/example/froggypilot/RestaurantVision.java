@@ -15,7 +15,7 @@ import java.util.List;
  * not purchased. The recipes, positions and level graphics may change.
  */
 public final class RestaurantVision {
-    public enum Kind { BUY_WITH_COINS, CONTINUE, CLOSE_PANEL, OPEN_UPGRADES, WAIT }
+    public enum Kind { TUTORIAL_TAP, BUY_WITH_COINS, CONTINUE, CLOSE_PANEL, OPEN_UPGRADES, WAIT }
     public static final class Decision {
         public final Kind kind;
         public final int x, y;
@@ -51,6 +51,14 @@ public final class RestaurantVision {
         if(argb==null || width<160 || height<300 || argb.length<width*height)
             return new Decision(Kind.WAIT,0,0,0,0,"Invalid screenshot");
         long signature=hash(argb,width,height);
+        // Tutorial overlays dim the ENTIRE board except for one glowing item.
+        // They must be handled before any menu/coin-button rules: otherwise
+        // the controller gets stuck in SCANNING at the very first tutorial.
+        Box hotspot=findTutorialSpotlight(argb,width,height);
+        if(hotspot!=null){
+            return new Decision(Kind.TUTORIAL_TAP,hotspot.cx(),hotspot.cy(),.94,
+                    signature,"Bright isolated tutorial target on dimmed board");
+        }
         List<Box> buttons=findGreenButtons(argb,width,height);
         boolean modal=looksLikeModal(argb,width,height);
         List<Box> coins=new ArrayList<>();
@@ -95,6 +103,80 @@ public final class RestaurantVision {
             return new Decision(Kind.OPEN_UPGRADES,(int)(width*.805),(int)(height*.969),.69,signature,
                     "Bottom-right upgrade tab");
         return new Decision(Kind.WAIT,0,0,0,signature,"Watching restaurant / waiting for new UI");
+    }
+
+    /**
+     * Find the isolated, white/mint highlighted object when the rest of the
+     * screen is dimmed by the game's forced tutorial. Works without fixed
+     * tap coordinates and across screen aspect ratios. The dark-board test
+     * and size bounds exclude ordinary white menus and currency/toolbars.
+     *
+     * IMPORTANT: this only generates a gesture when there is strong evidence
+     * for a *single* spotlight, never a blind tap in an unrecognized scene.
+     */
+    private Box findTutorialSpotlight(int[] p,int w,int h){
+        int dark=0,bright=0,total=0;
+        int dx=Math.max(3,w/45),dy=Math.max(3,h/60);
+        for(int y=(int)(h*.15);y<(int)(h*.85);y+=dy){
+            for(int x=(int)(w*.10);x<(int)(w*.90);x+=dx){
+                int l=lightness(p[y*w+x]);
+                total++;
+                if(l<145)dark++;
+                if(l>193)bright++;
+            }
+        }
+        if(total==0 || dark<total*.70 || bright>total*.075)return null;
+        int size=w*h;
+        boolean[] marked=new boolean[size];
+        for(int y=(int)(h*.15);y<(int)(h*.85);y++){
+            int start=y*w;
+            for(int x=(int)(w*.09);x<(int)(w*.91);x++){
+                int rgb=p[start+x],r=(rgb>>>16)&255,g=(rgb>>>8)&255,b=rgb&255;
+                marked[start+x]=r>185 && g>184 && b>158 && lightness(rgb)>197;
+            }
+        }
+        boolean[] visited=new boolean[size];
+        int[] queue=new int[size];
+        Box best=null;
+        int secondSize=0;
+        int requiredArea=Math.max(180,size/950);
+        for(int y=(int)(h*.15);y<(int)(h*.85);y++){
+            for(int x=(int)(w*.09);x<(int)(w*.91);x++){
+                int start=y*w+x;
+                if(!marked[start]||visited[start])continue;
+                int read=0,write=0;
+                queue[write++]=start;visited[start]=true;
+                Box box=new Box();box.minX=box.maxX=x;box.minY=box.maxY=y;
+                while(read<write){
+                    int pos=queue[read++],px=pos%w,py=pos/w;
+                    box.green++;
+                    if(px<box.minX)box.minX=px;
+                    if(px>box.maxX)box.maxX=px;
+                    if(py<box.minY)box.minY=py;
+                    if(py>box.maxY)box.maxY=py;
+                    for(int ny=py-1;ny<=py+1;ny++)for(int nx=px-1;nx<=px+1;nx++){
+                        if(nx<0||nx>=w||ny<0||ny>=h)continue;
+                        int ni=ny*w+nx;
+                        if(marked[ni]&&!visited[ni]){
+                            visited[ni]=true;queue[write++]=ni;
+                        }
+                    }
+                }
+                if(box.green<requiredArea || box.width()<w*.040 || box.height()<h*.025 ||
+                   box.width()>w*.33 || box.height()>h*.17)continue;
+                double aspect=box.width()/(double)box.height();
+                if(aspect<.55 || aspect>3.1)continue;
+                // Reject close-up menu cards or full-width white banners.
+                if(best==null || box.green>best.green){
+                    if(best!=null)secondSize=Math.max(secondSize,best.green);
+                    best=box;
+                }else secondSize=Math.max(secondSize,box.green);
+            }
+        }
+        // Two similarly prominent bright objects means there is no reliably
+        // singled-out target, so do not click anything automatically.
+        if(best==null || secondSize>best.green*.55)return null;
+        return best;
     }
 
     private boolean hasUpgradeArrow(int[] p,int w,int h){

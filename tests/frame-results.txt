@@ -1,14 +1,19 @@
 video07.jpg -> OPEN_UPGRADES @ (289,620) 0.69 Bottom-right upgrade tab
+video01_08.jpg -> TUTORIAL_TAP @ (118,347) 0.94 Bright isolated tutorial target on dimmed board
 video10.jpg -> OPEN_UPGRADES @ (289,620) 0.69 Bottom-right upgrade tab
+video01_10.jpg -> BUY_WITH_COINS @ (120,290) 0.92 Green button with a yellow coin-price icon
 video04.jpg -> BUY_WITH_COINS @ (268,298) 0.92 Green button with a yellow coin-price icon
 video06.jpg -> OPEN_UPGRADES @ (289,620) 0.69 Bottom-right upgrade tab
 video11.jpg -> BUY_WITH_COINS @ (268,283) 0.92 Green button with a yellow coin-price icon
+user_stuck_tutorial.png -> TUTORIAL_TAP @ (147,334) 0.94 Bright isolated tutorial target on dimmed board
+video01_54.jpg -> TUTORIAL_TAP @ (236,402) 0.94 Bright isolated tutorial target on dimmed board
 video09.jpg -> CLOSE_PANEL @ (300,153) 0.76 Orange round dismiss icon; no safe coin purchase
 video02.jpg -> OPEN_UPGRADES @ (289,620) 0.69 Bottom-right upgrade tab
 video05.jpg -> OPEN_UPGRADES @ (289,620) 0.69 Bottom-right upgrade tab
 manage_raw720.jpg -> BUY_WITH_COINS @ (537,595) 0.91 Green button with a yellow coin-price icon
 video01.jpg -> OPEN_UPGRADES @ (289,620) 0.69 Bottom-right upgrade tab
+video01_18.jpg -> BUY_WITH_COINS @ (120,291) 0.92 Green button with a yellow coin-price icon
 level_raw720.jpg -> BUY_WITH_COINS @ (450,949) 0.92 Green button with a yellow coin-price icon
 video08.jpg -> OPEN_UPGRADES @ (289,620) 0.69 Bottom-right upgrade tab
 video03.jpg -> BUY_WITH_COINS @ (225,474) 0.93 Green button with a yellow coin-price icon
-PASS: 13 screenshot examples, 5 coin purchase detections
+PASS: 18 screenshots including 3 tutorial targets, 7 coin detections
