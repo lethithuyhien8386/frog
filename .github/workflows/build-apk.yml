@@ -1,0 +1,105 @@
+name: Build and verify Froggy Pilot APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Compile, regress and validate debug APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Android SDK command-line tools
+        uses: android-actions/setup-android@v3
+      - name: Install only the actual required SDK packages (no deprecated tools package)
+        run: sdkmanager --install 'platforms;android-35' 'build-tools;35.0.0' 'platform-tools'
+      - name: Gradle 8.9
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Test vision detection on user-provided video sample frames
+        run: bash tests/test.sh
+      - name: Assemble signed debug APK
+        run: gradle --no-daemon --stacktrace :app:assembleDebug
+      - name: Validate APK ZIP, dex, manifest, V2 signatures, alignment and correct version
+        run: bash scripts/verify-apk.sh
+      - name: Upload candidate APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: FroggyPilot-Auto-Candidate
+          path: |
+            app/build/outputs/apk/debug/app-debug.apk
+            app/build/outputs/apk/debug/build-report.txt
+          retention-days: 14
+          if-no-files-found: error
+
+  install-launch-test:
+    name: Emulator install and start (API ${{ matrix.api }})
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        api: [28, 30, 35]
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: FroggyPilot-Auto-Candidate
+          path: candidate
+      - name: KVM access
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Install, launch, and check process
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api }}
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          disable-animations: true
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect
+          script: |
+            adb install -r candidate/app-debug.apk
+            adb shell pm path com.example.froggypilot | grep -q 'base.apk'
+            adb shell am start -W -n com.example.froggypilot/.MainActivity | tee start-result.txt
+            grep -q 'Status: ok' start-result.txt
+            sleep 4
+            adb shell pidof com.example.froggypilot
+            echo 'INSTALL + LAUNCH PASS'
+
+  publish-checked:
+    name: Publish APK only after install/launch tests succeed
+    needs: [build, install-launch-test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: FroggyPilot-Auto-Candidate
+          path: validated
+      - name: Check candidate exists
+        run: |
+          test -s validated/app-debug.apk
+          test -s validated/build-report.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: FroggyPilot-Auto-InstallChecked-APK
+          path: |
+            validated/app-debug.apk
+            validated/build-report.txt
+          if-no-files-found: error
+          retention-days: 14
