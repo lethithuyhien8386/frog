@@ -17,7 +17,7 @@ This is a **new Froggy/eatery management game** project based on screenshots sam
 3. After all jobs finish, open the workflow run → Artifacts → **`FroggyPilot-Auto-InstallChecked-APK`** → download. Extract and install `app-debug.apk` on a compatible Android device (Android 8+).
 4. If a job fails, read its log. Only the *InstallChecked* artifact has passed the scripted emulator install/launch smoke checks. These tests cannot verify real game interactions or permissions in the user's cloud phone.
 
-Uses JDK 17, Gradle 8.9, Android Gradle Plugin 8.6.1, Android SDK platform 35, Build-Tools 35.0.0. The workflow does **not** try to install the removed `tools` SDK package. `scripts/verify-apk.sh` reads the actual package/version values from `app/build.gradle` rather than comparing against an obsolete version.
+Uses JDK 17, Gradle 8.9, Android Gradle Plugin 8.6.1, Android SDK platform 35, Build-Tools 35.0.0. SDK SETUP FIX (2026-11-23): `android-actions/setup-android@v3` had a default `tools` dependency despite the separate install step avoiding it. The workflow now uses `android-actions/setup-android@v4` with `packages: platform-tools` and only installs SDK platform 35 and Build-Tools 35.0.0 explicitly. It never invokes `sdkmanager tools`. `scripts/verify-apk.sh` reads the actual package/version values from `app/build.gradle` rather than comparing against an obsolete version.
 
 ## How to operate
 
